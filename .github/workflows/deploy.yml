@@ -36,7 +36,7 @@ jobs:
           username: root
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            cd /root/portfolio
+            cd portfolio
             docker compose pull
             docker compose up -d
             docker image prune -f
