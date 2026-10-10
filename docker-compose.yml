@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: imran-portfolio-db
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: imran_portfolio
+    volumes:
+      - imran_portfolio_pg:/var/lib/postgresql/data
+
+volumes:
+  imran_portfolio_pg:

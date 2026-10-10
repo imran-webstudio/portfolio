@@ -1,0 +1,289 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-display), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+  --color-night: #04070b;
+  --color-aurora: #4ade80;
+  --color-aurora-soft: #86efac;
+  --color-borealis: #e879f9;
+  --animate-hud-in: hud-in 0.6s ease-out both;
+
+  @keyframes hud-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+  }
+}
+
+body {
+  background-color: #04070b;
+  color: #ecfdf5;
+}
+
+::selection {
+  background: rgb(74 222 128 / 30%);
+}
+
+/* Lenis smooth scroll */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+html.scroll-locked,
+html.scroll-locked body {
+  overflow: hidden;
+}
+
+/* The journey loops forever, so a scrollbar position would only mislead. */
+html {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+
+.hud-text {
+  text-shadow: 0 1px 14px rgb(2 6 8 / 60%);
+}
+
+.glass-panel {
+  position: relative;
+  background: linear-gradient(135deg, rgb(10 24 20 / 58%), rgb(6 12 16 / 42%));
+  border: 1px solid rgb(134 239 172 / 16%);
+  backdrop-filter: blur(12px) saturate(130%);
+  -webkit-backdrop-filter: blur(12px) saturate(130%);
+}
+@media (max-width: 767px) {
+  .glass-panel {
+    background: linear-gradient(135deg, rgb(6 16 14 / 78%), rgb(4 10 12 / 66%));
+  }
+}
+.glass-panel::before,
+.glass-panel::after {
+  content: "";
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-color: rgb(74 222 128 / 90%);
+  pointer-events: none;
+}
+.glass-panel::before {
+  top: 0;
+  left: 0;
+  border-top: 1px solid;
+  border-left: 1px solid;
+}
+.glass-panel::after {
+  right: 0;
+  bottom: 0;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+}
+
+.guide-bubble {
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  will-change: transform, opacity;
+}
+.guide-bubble[data-open="1"][data-visible="1"] {
+  opacity: 1;
+}
+.guide-tail {
+  position: absolute;
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  transform: rotate(45deg);
+  background: rgb(8 18 18 / 85%);
+  border-right: 1px solid rgb(134 239 172 / 22%);
+  border-bottom: 1px solid rgb(134 239 172 / 22%);
+}
+.guide-tail[data-below="1"] {
+  top: -5px;
+  bottom: auto;
+  transform: rotate(225deg);
+}
+
+.hud-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(74 222 128 / 40%) transparent;
+}
+
+.hud-link {
+  position: relative;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+.hud-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -3px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.35s ease;
+}
+.hud-link:hover {
+  opacity: 1;
+}
+.hud-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+@keyframes sound-bar {
+  0%,
+  100% {
+    height: 3px;
+  }
+  50% {
+    height: 12px;
+  }
+}
+.sound-bar {
+  height: 3px;
+  animation: sound-bar 0.9s ease-in-out infinite;
+}
+
+/* Custom cursor */
+html.custom-cursor,
+html.custom-cursor * {
+  cursor: none !important;
+}
+.cursor-ring,
+.cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  will-change: transform;
+  transition: opacity 0.3s;
+}
+.cursor-ring span {
+  position: absolute;
+  left: -18px;
+  top: -18px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgb(255 255 255 / 85%);
+  border-radius: 9999px;
+  transition:
+    transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+    background-color 0.35s,
+    border-color 0.35s;
+  mix-blend-mode: difference;
+}
+.cursor-ring.is-hover span {
+  transform: scale(1.7);
+  background-color: rgb(255 255 255 / 12%);
+}
+.cursor-ring.is-logo span {
+  transform: scale(2.1);
+  border-color: rgb(74 222 128);
+  background-color: rgb(74 222 128 / 10%);
+  mix-blend-mode: normal;
+}
+.cursor-ring.is-down span {
+  transform: scale(0.8);
+}
+/* Contact artifacts */
+.artifact-echo {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 8vw, 8.5rem);
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+  color: rgb(255 255 255 / 7%);
+  filter: blur(3px);
+  text-shadow: none;
+}
+
+/* Realm transition */
+.realm-vignette {
+  background: radial-gradient(ellipse at center, transparent 25%, rgb(2 4 8 / 96%) 100%);
+}
+.realm-cover {
+  background: radial-gradient(
+    circle at var(--rx, 50%) var(--ry, 50%),
+    #ffffff 0%,
+    #effff6 12%,
+    color-mix(in srgb, var(--accent) 55%, #4ade80) 38%,
+    var(--accent) 58%,
+    #04070b 110%
+  );
+}
+.realm-cover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.22;
+  mix-blend-mode: overlay;
+}
+
+/* Labels floating in the realms */
+.realm-tag {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  border: 1px solid rgb(134 239 172 / 28%);
+  background: rgb(4 10 12 / 55%);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+.realm-tag-left {
+  align-items: flex-start;
+}
+.realm-tag-index {
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  color: #4ade80;
+}
+.realm-tag-title {
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: white;
+}
+.realm-tag-detail {
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  color: rgb(255 255 255 / 55%);
+}
+.realm-tag-small {
+  padding: 3px 7px;
+}
+.realm-tag-small .realm-tag-title {
+  font-size: 10px;
+}
+
+.cursor-dot {
+  margin: -2px 0 0 -2px;
+  width: 4px;
+  height: 4px;
+  border-radius: 9999px;
+  background: white;
+}
