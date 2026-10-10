@@ -1,0 +1,76 @@
+name: Deploy To VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: portfolio-deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/imran-portfolio:${{ github.sha }} \
+            -t ${{ secrets.DOCKERHUB_USERNAME }}/imran-portfolio:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/imran-portfolio:${{ github.sha }}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/imran-portfolio:latest
+
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          IMAGE_TAG: ${{ github.sha }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: root
+          password: ${{ secrets.VPS_PASSWORD }}
+          envs: DOCKERHUB_USERNAME,DOCKERHUB_TOKEN,IMAGE_TAG
+          script: |
+            set -euo pipefail
+            cd /root/portfolio
+            echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+            image="$DOCKERHUB_USERNAME/imran-portfolio"
+            for attempt in 1 2 3 4 5 6 7 8; do
+              docker pull "$image:$IMAGE_TAG" && break
+              if [ "$attempt" = 8 ]; then
+                echo "Image $image:$IMAGE_TAG was not available after retries" >&2
+                exit 1
+              fi
+              sleep 15
+            done
+            docker tag "$image:$IMAGE_TAG" imran-portfolio:latest
+            docker compose up -d postgres
+            docker compose up -d --no-deps --no-build --force-recreate --pull never frontend
+            expected="$(docker image inspect --format '{{.Id}}' "$image:$IMAGE_TAG")"
+            cid="$(docker compose ps -q frontend)"
+            running="$(docker inspect --format '{{.Image}}' "$cid")"
+            echo "expected $expected"
+            echo "running  $running"
+            if [ "$running" != "$expected" ]; then
+              echo "frontend container is not running $IMAGE_TAG" >&2
+              exit 1
+            fi
+            docker image prune -f
