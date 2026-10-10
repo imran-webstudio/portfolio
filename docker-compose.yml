@@ -4,7 +4,7 @@ services:
     container_name: imran-portfolio-db
     restart: unless-stopped
     ports:
-      - "127.0.0.1:5432:5432"
+      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
@@ -19,10 +19,7 @@ services:
       start_period: 30s
 
   frontend:
-    image: imran-portfolio:latest
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: imranwebstudio/imran-portfolio:latest
     container_name: imran-portfolio-web
     restart: unless-stopped
     ports:
