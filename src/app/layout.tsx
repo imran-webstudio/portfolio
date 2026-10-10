@@ -9,7 +9,10 @@ export const metadata: Metadata = {
   title: "Imran Hossain — Full Stack Developer",
   description:
     "An immersive 3D portfolio for MD Imran (Imran Hossain) — full-stack developer working with React, Nest.js and TypeScript.",
-  icons: [{ rel: "icon", url: "/favicon.ico" }],
+  icons: [
+    { rel: "icon", url: "/icon.png", type: "image/png" },
+    { rel: "shortcut icon", url: "/favicon.ico" },
+  ],
 };
 
 const display = Syne({
