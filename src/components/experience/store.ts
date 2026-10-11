@@ -18,7 +18,7 @@ export const CHAPTER_COUNT = CHAPTERS.length;
 export const SEGMENT_COUNT = CHAPTER_COUNT + 1;
 
 /** Fraction of each chapter's scroll span spent transitioning in from the previous chapter. */
-export const TRANSITION = 0.3;
+export const TRANSITION = 0.5;
 
 export type RealmPhase = "idle" | "enter" | "inside" | "exit";
 

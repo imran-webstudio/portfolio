@@ -24,7 +24,7 @@ import { LAYOUTS, LOGO_COUNT, SLOTS } from "./layouts";
 import { buildLogoGeometry } from "./logoGeometry";
 
 const TAU = Math.PI * 2;
-const STAGGER = 0.45;
+const STAGGER = 0.28;
 const FROST = new Color("#e8f4ef");
 const FROST_GLOW = new Color("#9ff5c4");
 const AURORA = new Color("#4ade80");
@@ -49,7 +49,19 @@ export function makeHaloTexture() {
   return new CanvasTexture(canvas);
 }
 
-type LogoState = { hover: number; active: number; spin: number; spinVel: number; trail: number; tilt: number };
+type LogoState = {
+  hover: number;
+  active: number;
+  spin: number;
+  spinVel: number;
+  trail: number;
+  tilt: number;
+  px: number;
+  py: number;
+  pz: number;
+  sc: number;
+  placed: boolean;
+};
 
 export function Logos({ lite, projectTech }: { lite: boolean; projectTech: TechId[][] }) {
   const gl = useThree((s) => s.gl);
@@ -102,7 +114,20 @@ export function Logos({ lite, projectTech }: { lite: boolean; projectTech: TechI
   );
 
   const state = useMemo<LogoState[]>(
-    () => SLOTS.map(() => ({ hover: 0, active: 0, spin: 0, spinVel: 0, trail: 0, tilt: 0 })),
+    () =>
+      SLOTS.map(() => ({
+        hover: 0,
+        active: 0,
+        spin: 0,
+        spinVel: 0,
+        trail: 0,
+        tilt: 0,
+        px: 0,
+        py: 0,
+        pz: 0,
+        sc: 1,
+        placed: false,
+      })),
     [],
   );
 
@@ -187,7 +212,21 @@ export function Logos({ lite, projectTech }: { lite: boolean; projectTech: TechI
       a.y += st.trail;
       toCam.copy(camera.position).sub(a).normalize();
       a.addScaledVector(toCam, st.hover * 0.45);
-      g.position.copy(a);
+      // Glide toward the layout instead of locking to the scroll sample, matching the camera's ease.
+      const follow = ease(2.4);
+      if (!st.placed) {
+        st.px = a.x;
+        st.py = a.y;
+        st.pz = a.z;
+        st.sc = scale;
+        st.placed = true;
+      } else {
+        st.px += (a.x - st.px) * follow;
+        st.py += (a.y - st.py) * follow;
+        st.pz += (a.z - st.pz) * follow;
+        st.sc += (scale - st.sc) * follow;
+      }
+      g.position.set(st.px, st.py, st.pz);
       g.lookAt(camera.position);
       euler.set(
         Math.sin(t * 0.5 + r2 * 6) * 0.1 + st.tilt - live.pointerY * 0.4 * st.hover,
@@ -195,7 +234,7 @@ export function Logos({ lite, projectTech }: { lite: boolean; projectTech: TechI
         Math.sin(t * 0.3 + r0 * 6) * 0.06,
       );
       g.quaternion.multiply(q.setFromEuler(euler));
-      g.scale.setScalar(scale * (1 + st.hover * 0.22));
+      g.scale.setScalar(st.sc * (1 + st.hover * 0.22));
 
       const mat = assets.materials[i]!;
       const brand = assets.brand[i]!;

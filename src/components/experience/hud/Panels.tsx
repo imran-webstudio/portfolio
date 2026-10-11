@@ -44,14 +44,15 @@ function Panel({
   children: ReactNode;
 }) {
   return (
-    <div className={`absolute inset-x-4 bottom-24 ${POSITIONS[position]}`}>
+    <div className={`absolute inset-x-4 bottom-24 md:min-h-0 ${POSITIONS[position]}`}>
       <div
         inert={!visible}
-        className={`w-full transition-all duration-700 ease-out md:max-h-full ${
+        data-lenis-prevent={glass ? "" : undefined}
+        className={`w-full min-h-0 transition-all duration-1000 ease-out md:max-h-full ${
           visible
             ? "pointer-events-auto translate-y-0 opacity-100 blur-0"
             : "pointer-events-none translate-y-5 opacity-0 blur-[6px]"
-        } ${glass ? "glass-panel hud-scroll max-h-[55vh] overflow-x-hidden overflow-y-auto p-5 md:p-6" : ""}`}
+        } ${glass ? "glass-panel hud-scroll max-h-[55vh] overflow-x-hidden overflow-y-auto overscroll-contain p-5 md:p-6" : ""}`}
       >
         {children}
       </div>
@@ -89,7 +90,6 @@ export function Panels({
   const { index, settled, sub } = useChapter();
   const on = (i: number) => index === i && settled;
 
-  const experience = site.experience[Math.min(sub, site.experience.length - 1)];
   const contact = on(5) && sub === ARTIFACTS.length;
 
   return (
@@ -174,31 +174,45 @@ export function Panels({
             </li>
           ))}
         </ol>
-        {experience ? (
-          <div key={sub} className="animate-hud-in">
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/60">{experience.period}</p>
-            <h3 className="mt-2 font-[family-name:var(--font-display)] text-2xl text-white md:text-3xl">
-              <Scramble text={experience.title} active={on(3)} />
-            </h3>
-            <p className="mt-1 font-mono text-xs text-white/70">@ {experience.company}</p>
-            <ul className="mt-4 space-y-2 text-sm leading-relaxed text-white/80">
-              {experience.bullets.map((b) => (
-                <li key={b} className="flex gap-2">
-                  <span className="mt-[0.55em] h-px w-3 shrink-0 bg-aurora/60" />
-                  {b}
-                </li>
-              ))}
-            </ul>
-            <ul className="mt-5 flex flex-wrap gap-2 border-t border-white/15 pt-4" aria-label="Stack">
-              {experience.stack.map((id) => (
-                <li key={id} {...explain(TECH_BY_ID[id].title, `${noteFor(id)} Used in this role.`)}>
-                  <TechGlyph id={id} className="h-4 w-4" color={TECH_BY_ID[id].color} />
-                  <span className="sr-only">{TECH_BY_ID[id].title}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+        <div className="grid">
+          {site.experience.map((entry, i) => {
+            const active = i === sub;
+            return (
+              <div
+                key={entry.period}
+                aria-hidden={!active}
+                inert={!active}
+                className={`col-start-1 row-start-1 transition-[opacity,transform,filter] duration-700 ease-out motion-reduce:transition-none ${
+                  active
+                    ? "z-10 opacity-100 blur-0 translate-y-0"
+                    : "pointer-events-none z-0 opacity-0 blur-[6px] translate-y-2"
+                }`}
+              >
+                <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-white/60">{entry.period}</p>
+                <h3 className="mt-2 font-[family-name:var(--font-display)] text-2xl text-white md:text-3xl">
+                  <Scramble text={entry.title} active={on(3) && active} />
+                </h3>
+                <p className="mt-1 font-mono text-xs text-white/70">@ {entry.company}</p>
+                <ul className="mt-4 space-y-2 text-sm leading-relaxed text-white/80">
+                  {entry.bullets.map((b) => (
+                    <li key={b} className="flex gap-2">
+                      <span className="mt-[0.55em] h-px w-3 shrink-0 bg-aurora/60" />
+                      {b}
+                    </li>
+                  ))}
+                </ul>
+                <ul className="mt-5 flex flex-wrap gap-2 border-t border-white/15 pt-4" aria-label="Stack">
+                  {entry.stack.map((id) => (
+                    <li key={id} {...explain(TECH_BY_ID[id].title, `${noteFor(id)} Used in this role.`)}>
+                      <TechGlyph id={id} className="h-4 w-4" color={TECH_BY_ID[id].color} />
+                      <span className="sr-only">{TECH_BY_ID[id].title}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
       </Panel>
 
       {projects.length === 0 ? (

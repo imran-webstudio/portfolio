@@ -258,7 +258,9 @@ export function Experience() {
     // Lenis takes the short way round the loop, so measure the same distance it will travel.
     let distance = Math.abs(target - l.scroll);
     if (l.limit > 0) distance = Math.min(distance, l.limit - distance);
-    const duration = Math.min(5.2, Math.max(1.8, 1.4 + (distance / window.innerHeight) * 0.3));
+    // Long enough that the logo glide — the second half of the flight — lasts about two seconds.
+    const screens = distance / Math.max(1, window.innerHeight);
+    const duration = Math.min(12, Math.max(4.8, screens * 2.05));
     l.scrollTo(target, { duration, easing: easeInOutSine });
   };
 

@@ -13,6 +13,10 @@ export type LogoSlot = {
   band: number;
   bandIndex: number;
   bandCount: number;
+  /** Stack group, used to seat each craft on its own ring around the keeper. */
+  groupIndex: number;
+  indexInGroup: number;
+  groupCount: number;
 };
 
 function buildSlots(): LogoSlot[] {
@@ -23,8 +27,12 @@ function buildSlots(): LogoSlot[] {
     if (band < 0) band = bands.reduce((best, b, i) => (b.length < bands[best]!.length ? i : best), 0);
     bands[band]!.push(t.id);
   }
+  const seen = site.stack.map(() => 0);
   return TECH.map((t, index) => {
     const band = bands.findIndex((b) => b.includes(t.id));
+    const groupIndex = t.groupIndex;
+    const indexInGroup = seen[groupIndex]!;
+    seen[groupIndex] = indexInGroup + 1;
     return {
       id: t.id,
       index,
@@ -32,6 +40,9 @@ function buildSlots(): LogoSlot[] {
       band,
       bandIndex: bands[band]!.indexOf(t.id),
       bandCount: bands[band]!.length,
+      groupIndex,
+      indexInGroup,
+      groupCount: site.stack[groupIndex]!.items.length,
     };
   });
 }
@@ -60,17 +71,38 @@ const intro: Layout = (s, t, out) => {
   return portrait ? 0.4 : 0.52;
 };
 
+/**
+ * About camera sits to the left of the keeper and the copy sits on the right,
+ * so the orbits are shifted into the open half of the frame.
+ */
+const aboutCam = CAMERA[1]!;
+const aboutViewX = aboutCam.a.look[0] - aboutCam.a.pos[0];
+const aboutViewZ = aboutCam.a.look[2] - aboutCam.a.pos[2];
+const aboutViewLen = Math.hypot(aboutViewX, aboutViewZ) || 1;
+const aboutRightX = -aboutViewZ / aboutViewLen;
+const aboutRightZ = aboutViewX / aboutViewLen;
+
+/**
+ * A vertical wreath facing the about camera, with a gap between crafts.
+ * Languages sit at the crown and the rest of the stack follows around the keeper.
+ */
 const about: Layout = (s, t, out) => {
-  const [r1, r2, r3, r4] = s.rand;
-  const theta = r1 * TAU + t * 0.03;
-  const phi = Math.acos(0.15 + r2 * 0.8);
-  const dist = 3.6 + r3 * 2.6;
+  const portrait = live.aspect < 0.8;
+  const groups = site.stack.length;
+  const gap = 0.7;
+  const total = LOGO_COUNT + (groups - 1) * gap;
+  const slot = s.index + s.groupIndex * gap;
+  const radiusX = portrait ? 1.35 : 1.85;
+  const radiusY = portrait ? 1.2 : 1.48;
+  const angle = Math.PI / 2 - (slot / total) * TAU + t * 0.04;
+  const shift = portrait ? 0 : 0.12;
+  const across = Math.cos(angle) * radiusX;
   out.set(
-    Math.sin(phi) * Math.cos(theta) * dist,
-    0.9 + Math.cos(phi) * dist * 0.6 + Math.sin(t * 0.6 + r4 * 6) * 0.2,
-    Math.sin(phi) * Math.sin(theta) * dist,
+    aboutRightX * (across - shift),
+    (portrait ? 2.05 : 1.72) + Math.sin(angle) * radiusY,
+    aboutRightZ * (across - shift),
   );
-  return 0.58;
+  return portrait ? 0.28 : 0.34;
 };
 
 /** Wide screens: grid to the right of the left-hand panel. */

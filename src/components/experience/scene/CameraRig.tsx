@@ -120,7 +120,7 @@ export function CameraRig({ lite }: { lite: boolean }) {
         v.curLook.copy(v.look);
         first.current = false;
       } else {
-        const k = 1 - Math.exp(-delta * 5);
+        const k = 1 - Math.exp(-delta * 2.4);
         v.curPos.lerp(v.pos, k);
         v.curLook.lerp(v.look, k);
       }
